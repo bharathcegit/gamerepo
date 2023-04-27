@@ -44,7 +44,11 @@ pipeline
         {
             steps
             {
-                sshagent(['app-server-credentials']) {
+                withCredentials([usernamePassword(credentialsId: '453b3fd3-545e-4f9a-845f-18db9be54a77', 
+                passwordVariable: 'DOCKER_HUB_PASSWORD', usernameVariable: 'DOCKER_HUB_USERNAME')])
+                sshagent(['app-server-credentials'])
+                {
+                    sh "echo ${DOCKER_HUB_PASSWORD} | docker login --username ${DOCKER_HUB_USERNAME} --password-stdin"
                     sh "ssh ${APP_SERVER_USERNAME}@${APP_SERVER_IP} 'docker pull ${DOCKER_HUB_USERNAME}/${DOCKER_REPO_NAME}:${BUILD_NUMBER}'"
                     sh "ssh ${APP_SERVER_USERNAME}@${APP_SERVER_IP} 'docker stop ${CONTAINER_NAME} || true && docker rm ${CONTAINER_NAME} || true'"
                     sh "ssh ${APP_SERVER_USERNAME}@${APP_SERVER_IP} 'docker run -d --name ${CONTAINER_NAME} -p ${CONTAINER_PORT}:${CONTAINER_PORT} ${DOCKER_HUB_USERNAME}/${DOCKER_REPO_NAME}:${BUILD_NUMBER}'"
