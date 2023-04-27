@@ -4,6 +4,11 @@ pipeline
     environment 
     {
         DOCKER_REPO_NAME = 'game'
+        APP_SERVER_IP = '44.211.142.224'
+        APP_SERVER_USERNAME = 'root'
+        APP_SERVER_PASSWORD = '12345'
+        CONTAINER_NAME = 'game-container'
+        CONTAINER_PORT = '8002'
     }   
     stages
     {
@@ -32,6 +37,17 @@ pipeline
                     sh "echo ${DOCKER_HUB_PASSWORD} | docker login --username ${DOCKER_HUB_USERNAME} --password-stdin"
                     sh "docker tag game:${BUILD_NUMBER} ${DOCKER_HUB_USERNAME}/${DOCKER_REPO_NAME}:${BUILD_NUMBER}"
                     sh "docker push ${DOCKER_HUB_USERNAME}/${DOCKER_REPO_NAME}:${BUILD_NUMBER}"
+                }
+            }
+        }
+        stage('deploy the image to app server')
+        {
+            steps
+            {
+                sshagent(['app-server-credentials']) {
+                    sh "ssh ${APP_SERVER_USERNAME}@${APP_SERVER_IP} 'docker pull ${DOCKER_HUB_USERNAME}/${DOCKER_REPO_NAME}:${BUILD_NUMBER}'"
+                    sh "ssh ${APP_SERVER_USERNAME}@${APP_SERVER_IP} 'docker stop ${CONTAINER_NAME} || true && docker rm ${CONTAINER_NAME} || true'"
+                    sh "ssh ${APP_SERVER_USERNAME}@${APP_SERVER_IP} 'docker run -d --name ${CONTAINER_NAME} -p ${CONTAINER_PORT}:${CONTAINER_PORT} ${DOCKER_HUB_USERNAME}/${DOCKER_REPO_NAME}:${BUILD_NUMBER}'"
                 }
             }
         }
