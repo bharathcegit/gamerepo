@@ -1,0 +1,38 @@
+pipeline
+{
+    agent any
+    environment 
+    {
+        DOCKER_HUB_USERNAME = credentials('docker-hub-username')
+        DOCKER_HUB_PASSWORD = credentials('docker-hub-password')
+        DOCKER_REPO_NAME = 'game'
+    }   
+    stages
+    {
+        stage('pull the src from git')
+        {
+            steps
+            {
+                checkout scm
+            }
+
+        }
+        stage('build the image')
+        {
+            steps
+            {
+                sh 'docker build -t game:${BUILD_NUMBER} .'
+            }
+        }
+        stage('push the image to dockerhub')
+        {
+            steps
+            {
+                withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', passwordVariable: 'DOCKER_HUB_PASSWORD', usernameVariable: 'DOCKER_HUB_USERNAME')])
+                    sh "docker login -u ${DOCKER_HUB_USERNAME} -p ${DOCKER_HUB_PASSWORD}"
+                    sh "docker tag game:${BUILD_NUMBER} ${DOCKER_HUB_USERNAME}/${DOCKER_REPO_NAME}:${BUILD_NUMBER}"
+                    sh "docker push ${DOCKER_HUB_USERNAME}/${DOCKER_REPO_NAME}:${BUILD_NUMBER}"
+            }
+        }
+    }
+}
