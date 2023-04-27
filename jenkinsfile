@@ -1,6 +1,10 @@
 pipeline
 {
     agent any
+    environment 
+    {
+        DOCKER_REPO_NAME = 'game'
+    }   
     stages
     {
         stage('pull the src from git')
