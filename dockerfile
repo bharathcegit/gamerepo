@@ -5,5 +5,5 @@ RUN npm install
 RUN npm install grunt-cli
 RUN npm install liftup
 COPY . .
-EXPORT 8002
+EXPOSE 8002
 CMD ["grunt", "connect"]
